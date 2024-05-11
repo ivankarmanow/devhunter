@@ -1,0 +1,1 @@
+DB_URL = "postgresql+psycopg://ivan:ivanok1342@localhost:5432/practice"

@@ -1,0 +1,31 @@
+* {
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.font-black {
+  font-weight: 900;
+}
+
+.font-regular {
+  font-weight: 400;
+}
+
+/* body {
+    overflow-x: hidden;
+  } */
+
+.opaced {
+  opacity: .7;
+}
+
+.hover-opaced:hover {
+  opacity: 1;
+}
+
+.p-6 {
+  padding: 5rem;
+}
+
+textarea {
+  resize: none;
+}

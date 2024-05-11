@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript разработчик</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+          integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"
+            integrity="sha512-ykZ1QQr0Jy/4ZkvKuqWn4iF3lqPZyij9iRv6sGqLRdTPkY69YX6+7wvVGmsdBbiIfN/8OdsI7HABjvEok6ZopQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/icons/favicon.svg') }}">
+    <script src="{{ url_for('static', path='script/card.js') }}"></script>
+</head>
+
+<body class="bg-secondary-subtle">
+<div class="container-fluid bg-body-tertiary sticky-top">
+    <div class="row align-items-center">
+        <a href="{{ url_for('index') }}" class="col m-2">
+            <img src="../static/icons/logo.svg" alt="Логотип">
+        </a>
+        <div class="col-xl-3 col-lg-1 m-2 m-md-0"></div>
+        <a href="{{ url_for('vacancies') }}" class="col nav-link m-2">Вакансии</a>
+        <a href="{{ url_for('responses') }}" class="col nav-link m-2">Мои отклики</a>
+        <div class="col-xl-3 col-lg-1 m-md-0"></div>
+        <a href="{{ url_for('auth') }}" class="btn btn-light rounded-pill col me-4 m-2">Войти</a>
+    </div>
+</div>
+
+<div class="d-flex align-items-center flex-column" style="margin-top: 100px;">
+    <h1 class="font-black display-1">{{ vacancy.profession.profession }}</h1>
+    <div class="d-flex mt-4 gap-4">
+        <span class="bg-body-tertiary rounded-pill py-3 px-5 fs-3" style="cursor: ">{{ vacancy.salary }} рублей</span>
+        <span class="bg-body-tertiary rounded-pill py-3 px-5 fs-3">Опыт от {{ vacancy.exp }} года</span>
+    </div>
+</div>
+
+<div class="container-fluid mt-5 px-5">
+    <div class="row column-gap-3">
+        <div class="col rounded-5 bg-secondary-subtle border border-white p-4 fs-5"
+             style="--bs-border-opacity: .15">
+            {{ vacancy.content | safe }}
+{#            <p class="font-black fs-2">О команде</p>#}
+{#            <p>Наша команда инфраструктуры делает быстрые, стабильные и удобные релизы приложений для разных#}
+{#                платформ,#}
+{#                ускоряет продуктовую разработку, повышает стабильность и качество кода и упрощает жизнь#}
+{#                разработчиков.#}
+{#                Мы ищем разработчика фронтенда, который будет развивать инфраструктуру и автоматизировать миграции.#}
+{#            </p>#}
+{#            <p class="font-black fs-2">Вы будете:</p>#}
+{#            <ul>#}
+{#                <li>развивать сборку и инфраструктуру для релизов и автоматизированного тестирования;</li>#}
+{#                <li>автоматизировать и продвигать миграции с одних технологий на другие;</li>#}
+{#                <li>поддерживать стек в актуальном состоянии (обновление зависимостей или переход на более#}
+{#                    подходящие);#}
+{#                </li>#}
+{#                <li>участвовать в решении инфраструктурных и архитектурных вопросов.</li>#}
+{#            </ul>#}
+{##}
+{#            <p><span class="font-black fs-2">С помощью таких технологий, как</span> React, Redux, TypeScript, RxJS,#}
+{#                webpack, SSR на Node.js.</p>#}
+{##}
+{#            <p class="font-black fs-2">У нас всё сложится, если у вас есть:</p>#}
+{#            <ul>#}
+{#                <li>опыт работы с webpack и настройкой конфиги;</li>#}
+{#                <li>опыт настройки релизных процессов или понимание, как это делать;</li>#}
+{#                <li>любовь к сложным архитектурным задачам;</li>#}
+{#                <li>умение погружаться в неизвестные области со множеством связей;</li>#}
+{#                <li>понимание, что нужно разработчикам, и желание упрощать им жизнь;</li>#}
+{#                <li>отличное знание TypeScript и Node.js.</li>#}
+{#            </ul>#}
+{##}
+{#            <p class="font-black fs-2">Будет здорово, если ещё у вас есть:</p>#}
+{#            <ul>#}
+{#                <li>опыт работы с любой системой CI/CD: TeamCity, Sandbox и т. д.;</li>#}
+{#                <li>организация монорепозитория;</li>#}
+{#                <li>опыт написания кодмодов;</li>#}
+{#                <li>понимание Unix-систем;</li>#}
+{#                <li>знакомство с RxJS;</li>#}
+{#                <li>знание Python или Java на базовом уровне.</li>#}
+{#            </ul>#}
+
+        </div>
+        <div class="col-3">
+            <div class="d-flex flex-column justify-content-between h-100">
+                <div class="rounded-5 border border-white p-4" style="--bs-border-opacity: .15">
+                    <div class="d-flex gap-3 mb-4">
+                        <img src="{{ url_for('static', path='empl/'+str(employer.id)+".svg") }}" alt="" class="w-25">
+                        <div class="d-flex flex-column justify-content-between py-3">
+                            <h2 class="font-black">{{ employer.company_name }}</h2>
+                            <span class="fs-5 opaced">{{ employer.slogan }}</span>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="fs-5 mb-4">{{ employer.short_description }}
+                        </div>
+                        <a href="{{ url_for('company', id=employer.id) }}" class="btn btn-primary rounded-pill btn-lg p-5 py-3">Перейти на сайт</a>
+                    </div>
+                </div>
+                <div>
+                    <span class="fs-5 font-black">Адрес работодателя/рабочего места:</span>
+                    <p>{{ vacancy.address }}</p>
+                    <span class="fs-5 font-black">Дата публикации:</span>
+                    <p class="mb-0">{{ vacancy.pub_date.strftime('%d %B %Y, %H:%M') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form class="container-fluid mt-5 p-5" id="response_form">
+    <p class="display-5">Оставьте отклик на вакансию</p>
+    <textarea name="cover_letter" class="form-control rounded-5 p-4 w-75 border-0 shadow-none" rows="9"
+              placeholder="Расскажите почему именно вы подходите для этой вакансии..."></textarea>
+    <input type="hidden" value="{{ vacancy.id }}" name="vacancy_id">
+    <button class="btn btn-primary btn-lg rounded-4 mt-3 px-5 py-3" type="submit" data-bs-toggle="modal" data-bs-target="#onresponse">Откликнуться</button>
+</form>
+
+<script>
+    document.getElementById("response_form").addEventListener("submit", submit_form);
+</script>
+
+<div class="modal" id="onresponse">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Отклик отправлен!</h5>
+                <button class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center gap-3">
+                <a href="{{ url_for('vacancies') }}" class="btn btn-primary">К списку вакансий</a>
+                <a href="{{ url_for('responses') }}" class="btn btn-primary">К откликам</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+{#            <div class="modal-footer">#}
+{##}
+{#            </div>#}
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid p-6">
+    <hr class="ms-5 me-5 mt-5">
+    <h1 class="text-center font-black mt-5 p-5" style="font-size: 48pt;">Топовые компании</h1>
+    <div class="row row-cols-lg-4 row-cols-md-3 g-4">
+        <div class="col">
+            <div class="card p-4 rounded-5 bg-secondary-subtle h-100 justify-content-center">
+                <div class="row justify-content-center">
+                    <div class="col"></div>
+                    <img src="../static/icons/ozon.svg" alt="" class="card-img-top col">
+                    <div class="col"></div>
+                </div>
+                <h2 class="card-title mt-4 font-black text-center">Ozon</h2>
+                <h6 class="card-subtitle text-body-secondary font-regular text-center">Ozon - это люди</h6>
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('company', id=2) }}"
+                       class="btn btn-primary rounded-pill w-50 mt-4 stretched-link">Вакансии</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card p-4 rounded-5 bg-secondary-subtle h-100">
+                <div class="row justify-content-center">
+                    <div class="col"></div>
+                    <img src="../static/icons/vk.svg" alt="" class="card-img-top col">
+                    <div class="col"></div>
+                </div>
+                <h2 class="card-title mt-4 font-black text-center">VK</h2>
+                <h6 class="card-subtitle text-body-secondary font-regular text-center">VK - лучше вместе</h6>
+                <div class="d-flex justify-content-center align-items-end">
+                    <a href="{{ url_for('company', id=4) }}"
+                       class="btn btn-primary rounded-pill w-50 mt-4 stretched-link">Вакансии</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card p-4 rounded-5 bg-secondary-subtle h-100">
+                <div class="row justify-content-center">
+                    <div class="col"></div>
+                    <img src="../static/icons/tinkoff.svg" alt="" class="card-img-top col">
+                    <div class="col"></div>
+                </div>
+                <h2 class="card-title mt-4 font-black text-center">Tinkoff</h2>
+                <h6 class="card-subtitle text-body-secondary font-regular text-center">Он такой один</h6>
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('company', id=3) }}"
+                       class="btn btn-primary rounded-pill w-50 mt-4 stretched-link">Вакансии</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card p-4 rounded-5 bg-secondary-subtle h-100">
+                <div class="row justify-content-center">
+                    <div class="col"></div>
+                    <img src="../static/icons/yandex.svg" alt="" class="card-img-top col">
+                    <div class="col"></div>
+                </div>
+                <h2 class="card-title mt-4 font-black text-center">Яндекс</h2>
+                <h6 class="card-subtitle text-body-secondary font-regular text-center">Найдётся всё</h6>
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('company', id=1) }}"
+                       class="btn btn-primary rounded-pill w-50 mt-4 stretched-link">Вакансии</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid bg-body-tertiary p-5 pb-3">
+    <div class="row">
+        <div class="col">
+            <img src="../static/icons/logo.svg" alt="">
+            <p class="mt-2 opaced">Помогаем разработчикам с 2024 года!</p>
+            <p class="mt-4 opaced">DevHunter © 2024</p>
+        </div>
+        <div class="col align-items-center mt-5">
+            <div class="row align-items-center row-cols-5">
+                <div class="col">
+                    <a href="https://vk.com"><img src="../static/icons/vk_footer.svg" alt=""></a>
+                </div>
+                <div class="col">
+                    <a href="https://instagram.com"><img src="../static/icons/inst.svg" alt=""></a>
+                </div>
+                <div class="col">
+                    <a href="https://telegram.org"><img src="../static/icons/tg.svg" alt=""></a>
+                </div>
+                <div class="col">
+                    <a href="https://youtube.com"><img src="../static/icons/yt.svg" alt=""></a>
+                </div>
+                <div class="col">
+                    <a href="https://twitter.com"><img src="../static/icons/twitter.svg" alt=""></a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <ul class="list-unstyled text-end lh-lg">
+                <li><a href="#" class="text-decoration-none text-body-secondary opaced hover-opaced">Поддержка</a>
+                </li>
+                <li><a href="#" class="text-decoration-none text-body-secondary opaced hover-opaced">Контакты</a>
+                </li>
+                <li><a href="#" class="text-decoration-none text-body-secondary opaced hover-opaced">Политика
+                    конфиденциальности</a></li>
+                <li><a href="#" class="text-decoration-none text-body-secondary opaced hover-opaced">Юридическая
+                    информация</a></li>
+                <li><a href="#" class="text-decoration-none text-body-secondary opaced hover-opaced">О нас</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

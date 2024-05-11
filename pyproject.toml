@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "практика"
+version = "0.1.0"
+description = ""
+authors = ["Ivan Karmanov <ivankarmanow@yandex.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111.0"
+sqladmin = {extras = ["full"], version = "^0.16.1"}
+sqlalchemy = "^2.0.30"
+pydantic = "^2.7.1"
+alembic = "^1.13.1"
+psycopg = "^3.1.18"
+jinja2 = "^3.1.4"
+uvicorn = "^0.29.0"
+passlib = "^1.7.4"
+python-jose = "^3.3.0"
+bcrypt = "^4.1.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
