@@ -13,10 +13,11 @@ class UserView(ModelView, model=User):
     name_plural = "Соискатели"
     icon = "fa fa-user"
 
-    column_exclude_list = [User.password, User.exp, User.cv, User.contacts, User.responses]
+    column_list = [User.id, User.name, User.birthdate, User.gender, User.salary, User.exp, User.phone, User.status, User.address, User.login, "profession.profession"]
+    # column_exclude_list = [User.password, User.exp, User.cv, User.contacts, User.responses]
     column_details_exclude_list = [User.password]
     column_searchable_list = [User.name, User.cv, User.phone]
-    column_sortable_list = [User.id, User.birthdate, User.reg_date, User.exp, User.salary, User.status]
+    column_sortable_list = [User.id, User.birthdate, User.exp, User.salary, User.status]
 
     column_labels = {
         User.id: "ID",
@@ -34,6 +35,9 @@ class UserView(ModelView, model=User):
         User.login: "Логин",
         User.password: "Пароль",
         User.responses: "Отклики",
+        User.profession: "Специальность",
+        User.profession_id: "ID специальности",
+        "profession.profession": "Специальность"
     }
 
 
@@ -152,16 +156,17 @@ class ProfessionView(ModelView, model=Profession):
     name_plural = "Специальности"
     icon = "fa fa-users"
 
-    column_exclude_list = [Profession.vacancies]
+    column_exclude_list = [Profession.vacancies, Profession.users]
     column_details_list = "__all__"
     column_searchable_list = [Profession.id]
     column_sortable_list = [Profession.id, Profession.profession]
 
-    form_excluded_columns = [Profession.vacancies]
+    form_excluded_columns = [Profession.vacancies, Profession.users]
 
     column_labels = {
         Profession.id: "ID",
-        Profession.profession: "Специальность"
+        Profession.profession: "Специальность",
+        Profession.users: "Соискатели"
     }
 
 class AdminView(ModelView, model=Admin):

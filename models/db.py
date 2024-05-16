@@ -32,7 +32,10 @@ class User(Base):
     login: Mapped[str]
     password: Mapped[str]
 
+    profession_id: Mapped[Optional[int]] = mapped_column(ForeignKey('professions.id'))
+
     responses: Mapped[list["Response"]] = relationship("Response", back_populates="user")
+    profession: Mapped[Optional["Profession"]] = relationship("Profession", back_populates="users")
 
     def __str__(self):
         return f"{self.name} ({self.login}, {self.id})"
@@ -76,6 +79,7 @@ class Profession(Base):
     profession: Mapped[str]
 
     vacancies: Mapped[list["Vacancy"]] = relationship("Vacancy", back_populates="profession")
+    users: Mapped[list["User"]] = relationship("User", back_populates="profession")
 
     def __str__(self):
         return f"{self.profession} ({self.id})"

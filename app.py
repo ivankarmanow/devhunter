@@ -20,7 +20,6 @@ import config
 from admin_auth import AdminAuth
 from views import *
 
-
 logging.getLogger('passlib').setLevel(logging.ERROR)
 
 engine = create_engine(config.DB_URL)
@@ -48,7 +47,7 @@ def get_password_hash(password):
 
 
 def create_access_token(id: int, expires_delta: timedelta | None = None):
-    to_encode = {"sub": id}
+    to_encode = {"sub": str(id)}
     if expires_delta:
         expire = datetime.datetime.now(timezone.utc) + expires_delta
     else:
@@ -59,7 +58,7 @@ def create_access_token(id: int, expires_delta: timedelta | None = None):
 
 
 def authenticate_user(session: Session, username: str, password: str) -> User | Literal[False]:
-    user = session.scalar(select(User).where(User.login == username))
+    user = session.scalars(select(User).where(User.login == username)).one_or_none()
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -67,23 +66,33 @@ def authenticate_user(session: Session, username: str, password: str) -> User | 
     return user
 
 
-async def get_current_user(token: Annotated[str, Cookie()] = None) -> User:
+async def get_current_user(session: Annotated[Session, Depends(session)],
+                           token: Annotated[str, Cookie()] = None) -> User | None:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials"
     )
+    print(token)
     if not token:
-        raise credentials_exception
+        # raise credentials_exception
+        return None
     try:
+        print(type(token))
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # print(payload)
         id: int = payload.get("sub")
+        # print(id)
         if id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    user = session.get(User, id)
-    if user is None:
-        raise credentials_exception
+            # raise credentials_exception
+            return None
+    except JWTError as e:
+        # raise credentials_exception
+        print(e)
+        return None
+    user = session.get(User, id, options=(joinedload('*'),))
+    # if user is None:
+    #     # raise credentials_exception
+    #     return None
     return user
 
 
@@ -114,30 +123,36 @@ def auth_form(
 ):
     user = authenticate_user(session, login, password)
     if not user:
-        return RedirectResponse(request.url_for('auth'))
+        return RedirectResponse(request.url_for('auth'), status_code=status.HTTP_302_FOUND)
     access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
     access_token = create_access_token(
         id=user.id, expires_delta=access_token_expires
     )
-    resp = RedirectResponse(request.url_for('profile'))
+    resp = RedirectResponse(request.url_for('profile'), status_code=status.HTTP_302_FOUND)
     resp.set_cookie(key="token", value=access_token)
     return resp
 
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request, session: Annotated[Session, Depends(session)]):
+def index(request: Request, session: Annotated[Session, Depends(session)],
+          user: Annotated[Optional[User], Depends(get_current_user)] = None):
     profs = session.scalars(select(Profession))
-    return templates.TemplateResponse(request, "index.html", {"profs": profs})
+    return templates.TemplateResponse(request, "index.html", {"profs": profs, "user": user})
 
 
-@app.get("/auth", response_class=HTMLResponse)
-def auth(request: Request, session: Annotated[Session, Depends(session)]):
-    return templates.TemplateResponse(request, "auth.html")
+@app.get("/auth")
+def auth(request: Request, session: Annotated[Session, Depends(session)],
+         user: Annotated[Optional[User], Depends(get_current_user)] = None):
+    if user:
+        return RedirectResponse(request.url_for('profile'), status_code=status.HTTP_302_FOUND)
+    else:
+        return templates.TemplateResponse(request, "auth.html")
 
 
 @app.get("/reg", response_class=HTMLResponse)
-def reg(request: Request, session: Annotated[Session, Depends(session)], email: Optional[str] = None, error: Optional[str] = None):
-    return templates.TemplateResponse(request, "reg.html", {"email": email})
+def reg(request: Request, session: Annotated[Session, Depends(session)], email: Optional[str] = None,
+        error: Optional[str] = None, user: Annotated[Optional[User], Depends(get_current_user)] = None):
+    return templates.TemplateResponse(request, "reg.html", {"email": email, "user": user})
 
 
 @app.post("/reg_form", response_class=RedirectResponse)
@@ -173,15 +188,11 @@ def reg_form(session: Annotated[Session, Depends(session)], request: Request,
     return resp
 
 
-@app.get("/responses", response_class=HTMLResponse)
-def responses(request: Request, session: Annotated[Session, Depends(session)], user: Annotated[User, Depends(get_current_user)]):
-    return templates.TemplateResponse(request, "responses.html")
-
-
 @app.post("/vacancies", response_class=HTMLResponse)
 def vacancies(request: Request, session: Annotated[Session, Depends(session)],
               prof: Annotated[Optional[int], Form()] = None, exp: Annotated[Optional[int], Form()] = None,
-              salary: Annotated[Optional[int], Form()] = None):
+              salary: Annotated[Optional[int], Form()] = None,
+              user: Annotated[Optional[User], Depends(get_current_user)] = None):
     profs = session.scalars(select(Profession))
     vacs = select(Vacancy)
     if prof is not None:
@@ -194,12 +205,13 @@ def vacancies(request: Request, session: Annotated[Session, Depends(session)],
     vacancies = session.execute(vacs).unique().scalars().all()
     return templates.TemplateResponse(request, "vacancies.html",
                                       {"prof_id": prof, "exp": exp, "salary": salary, "profs": profs,
-                                       "vacancies": vacancies})
+                                       "vacancies": vacancies, "user": user})
 
 
 @app.get("/vacancies", response_class=HTMLResponse)
 def vacancies(request: Request, session: Annotated[Session, Depends(session)], prof: Optional[int] = None,
-              salary: Optional[int] = None, exp: Optional[int] = None):
+              salary: Optional[int] = None, exp: Optional[int] = None,
+              user: Annotated[Optional[User], Depends(get_current_user)] = None):
     profs = session.scalars(select(Profession))
     vacs = select(Vacancy)
     if prof is not None:
@@ -212,12 +224,13 @@ def vacancies(request: Request, session: Annotated[Session, Depends(session)], p
     vacancies = session.execute(vacs).unique().scalars().all()
     return templates.TemplateResponse(request, "vacancies.html",
                                       {"prof_id": prof, "exp": exp, "salary": salary, "profs": profs,
-                                       "vacancies": vacancies})
+                                       "vacancies": vacancies, "user": user})
 
 
 @app.get("/vacancies/{prof}", response_class=HTMLResponse)
 def vacancies(request: Request, session: Annotated[Session, Depends(session)], prof: Optional[int] = None,
-              salary: Optional[int] = None, exp: Optional[int] = None):
+              salary: Optional[int] = None, exp: Optional[int] = None,
+              user: Annotated[Optional[User], Depends(get_current_user)] = None):
     profs = session.scalars(select(Profession))
     vacs = select(Vacancy)
     if prof is not None:
@@ -230,31 +243,80 @@ def vacancies(request: Request, session: Annotated[Session, Depends(session)], p
     vacancies = session.execute(vacs).unique().scalars().all()
     return templates.TemplateResponse(request, "vacancies.html",
                                       {"prof_id": prof, "exp": exp, "salary": salary, "profs": profs,
-                                       "vacancies": vacancies})
+                                       "vacancies": vacancies, "user": user})
 
 
 @app.get("/vacancy/{id}", response_class=HTMLResponse)
-def vacancy(request: Request, session: Annotated[Session, Depends(session)], id: int):
+def vacancy(request: Request, session: Annotated[Session, Depends(session)], id: int,
+            user: Annotated[Optional[User], Depends(get_current_user)] = None):
     vacancy = session.get(Vacancy, id, options=(joinedload("*"),))
-    return templates.TemplateResponse(request, "card.html", {"vacancy": vacancy, "employer": vacancy.employer})
+    return templates.TemplateResponse(request, "card.html",
+                                      {"vacancy": vacancy, "employer": vacancy.employer, "user": user})
 
 
 @app.get("/company/{id}", response_class=HTMLResponse)
-def company(request: Request, session: Annotated[Session, Depends(session)], id: int):
+def company(request: Request, session: Annotated[Session, Depends(session)], id: int,
+            user: Annotated[Optional[User], Depends(get_current_user)] = None):
     company = session.get(Employer, id, options=(joinedload("*"),))
-    return templates.TemplateResponse(request, "company.html", {"employer": company})
+    return templates.TemplateResponse(request, "company.html", {"employer": company, "user": user})
 
 
 @app.get("/profile", response_class=HTMLResponse)
-def profile(request: Request, session: Annotated[Session, Depends(session)]):
-    return templates.TemplateResponse(request, "profile.html")
+def profile(request: Request, session: Annotated[Session, Depends(session)],
+            user: Annotated[Optional[User], Depends(get_current_user)] = None):
+    return templates.TemplateResponse(request, "profile.html", {"user": user})
+
+
+@app.get("/responses", response_class=HTMLResponse)
+def responses(request: Request, session: Annotated[Session, Depends(session)],
+              user: Annotated[User, Depends(get_current_user)],
+              status: int = 0, answered: int = 0):
+    statuses = session.scalars(select(Status))
+    stmt = select(Response).where()
+    if status != 0 and session.get(Status, status):
+        stmt = stmt.where(Response.status == status)
+    if answered == 1:
+        stmt = stmt.where(Response.employer_response != None)
+    elif answered == 2:
+        stmt = stmt.where(Response.employer_response == None)
+    responses = session.scalars(stmt).all()
+    colors = {
+        1: "success",
+        2: "error",
+        3: "warning",
+        4: "info"
+    }
+    return templates.TemplateResponse(request, "responses.html", {"user": user, "responses": responses, "statuses": statuses, "colors": colors})
+
+
+@app.post("/responses", response_class=HTMLResponse)
+def responses(request: Request, session: Annotated[Session, Depends(session)],
+              user: Annotated[User, Depends(get_current_user)],
+              status: Annotated[int, Form()] = 0, answered: Annotated[int, Form()] = 0):
+    statuses = session.scalars(select(Status))
+    stmt = select(Response).where()
+    if status != 0 and session.get(Status, status):
+        stmt = stmt.where(Response.status_id == status)
+    if answered == 1:
+        stmt = stmt.where(Response.employer_response != None)
+    elif answered == 2:
+        stmt = stmt.where(Response.employer_response == None)
+    responses = session.scalars(stmt).all()
+    colors = {
+        1: "success",
+        2: "error",
+        3: "warning",
+        4: "info"
+    }
+    return templates.TemplateResponse(request, "responses.html", {"user": user, "responses": responses, "statuses": statuses, "colors": colors, "status": status, "answered": answered})
 
 
 @app.post("/make_response")
 def make_response(request: Request, session: Annotated[Session, Depends(session)], cover_letter: Annotated[str, Form()],
-                  vacancy_id: Annotated[int, Form()]):
+                  vacancy_id: Annotated[int, Form()], user: Annotated[User, Depends(get_current_user)]):
     session.add(Response(
         cover_letter=cover_letter,
         vacancy_id=vacancy_id,
-        user_id=request.user.id
+        user_id=user.id
     ))
+    session.commit()
