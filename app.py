@@ -1,7 +1,7 @@
 import locale
 import datetime
 from datetime import timedelta, timezone
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Union
 import logging
 
 from fastapi import FastAPI, Depends, Request, Form, HTTPException, Cookie, status
@@ -46,7 +46,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def create_access_token(id: int, expires_delta: timedelta | None = None):
+def create_access_token(id: int, expires_delta: Optional[timedelta] = None):
     to_encode = {"sub": str(id)}
     if expires_delta:
         expire = datetime.datetime.now(timezone.utc) + expires_delta
@@ -57,7 +57,7 @@ def create_access_token(id: int, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def authenticate_user(session: Session, username: str, password: str) -> User | Literal[False]:
+def authenticate_user(session: Session, username: str, password: str) -> Union[User, Literal[False]]:
     user = session.scalars(select(User).where(User.login == username)).one_or_none()
     if not user:
         return False
@@ -67,7 +67,7 @@ def authenticate_user(session: Session, username: str, password: str) -> User | 
 
 
 async def get_current_user(session: Annotated[Session, Depends(session)],
-                           token: Annotated[str, Cookie()] = None) -> User | None:
+                           token: Annotated[str, Cookie()] = None) -> Optional[User]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials"
