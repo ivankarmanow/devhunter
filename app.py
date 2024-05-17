@@ -152,13 +152,14 @@ def auth(request: Request, session: Annotated[Session, Depends(session)],
 @app.get("/reg", response_class=HTMLResponse)
 def reg(request: Request, session: Annotated[Session, Depends(session)], email: Optional[str] = None,
         error: Optional[str] = None, user: Annotated[Optional[User], Depends(get_current_user)] = None):
-    return templates.TemplateResponse(request, "reg.html", {"email": email, "user": user})
+    return templates.TemplateResponse(request, "reg.html", {"email": email, "user": user, "error": error})
 
 
 @app.post("/reg_form", response_class=RedirectResponse)
 def reg_form(session: Annotated[Session, Depends(session)], request: Request,
              login: Annotated[str, Form()],
              password: Annotated[str, Form()],
+             password2: Annotated[str, Form()],
              fio: Annotated[str, Form()],
              phone: Annotated[str, Form()],
              stat: Annotated[bool, Form()] = False,
@@ -168,7 +169,16 @@ def reg_form(session: Annotated[Session, Depends(session)], request: Request,
              address: Annotated[Optional[str], Form()] = None
              ):
     if len(session.scalars(select(User).where(User.login == login)).all()) > 0:
-        return RedirectResponse("/reg?error=Пользователь с таким логином уже существует")
+        return RedirectResponse("/reg?error=Пользователь с таким логином уже существует&error_field=login", status_code=status.HTTP_302_FOUND)
+    if password2 != password:
+        return RedirectResponse("/reg?error=Пароли не совпадают&error_field=password")
+    if birthdate > datetime.date.today():
+        return RedirectResponse("/reg?error=Укажите дату в прошлом&error_field=birthdate")
+    if exp < 0:
+        return RedirectResponse("/reg?error=Опыт не может быть отрицательным&error_field=exp")
+    if salary < 0:
+        return RedirectResponse("/reg?error=Зарплата не может быть отрицательно&error_field=salary")
+
     user = User(
         login=login,
         password=get_password_hash(password),
@@ -183,7 +193,7 @@ def reg_form(session: Annotated[Session, Depends(session)], request: Request,
     session.add(user)
     session.commit()
 
-    resp = RedirectResponse(request.url_for('profile'))
+    resp = RedirectResponse(request.url_for('profile'), status_code=status.HTTP_302_FOUND)
     resp.set_cookie(key="token", value=create_access_token(user.id))
     return resp
 
